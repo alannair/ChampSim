@@ -3,7 +3,7 @@
 #include <getopt.h>
 #include "ooo_cpu.h"
 #include "uncore.h"
-#include "vans_wrapper.h"
+#include "vans_wrapper.cc"
 #include <fstream>
 
 uint8_t warmup_complete[NUM_CPUS],
@@ -769,6 +769,8 @@ int main(int argc, char** argv)
         }
 
         NVDIMM VANS(config_filename);
+        VANS.init();
+        // VANS.config_filename = config_filename;
 
         warmup_complete[i] = 0;
         //all_warmup_complete = NUM_CPUS;

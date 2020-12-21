@@ -7,6 +7,7 @@ if [ "$#" -lt 4 ]; then
 fi
 
 TRACE_DIR=/home/alannair/Documents/ipc1_public
+CONFIG_FILE=/home/alannair/Documents/ChampSim-VANS/config/vans.cfg
 BINARY=${1}
 N_WARM=${2}
 N_SIM=${3}
@@ -42,4 +43,6 @@ if [ ! -f "$TRACE_DIR/$TRACE" ] ; then
 fi
 
 mkdir -p results/results_${N_SIM}M
-(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
+(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 -config ${CONFIG_FILE} ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
+
+#  r -warmup_instructions 5000000 -simulation_instructions 5000000 -config /home/alannair/Documents/ChampSim-VANS/config/vans.cfg -traces /home/alannair/Documents/ipc1_public/client_001.champsimtrace.xz &> results/debug.txt

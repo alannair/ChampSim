@@ -23,7 +23,7 @@ int NVDIMM::add_rq( PACKET* packet)
     }
 
     // check if block-alignment is really needed
-    logic_addr_t req_addr = packet->address;
+    logic_addr_t req_addr = ait::translate_to_block_addr(packet->address);
     base_request_type req_type = base_request_type::read;
     clk_t curr_clk = current_core_cycle[packet->cpu];
 
@@ -33,16 +33,21 @@ int NVDIMM::add_rq( PACKET* packet)
     */
     auto callback = [&](logic_addr_t logic_addr, clk_t curr_clk)
     {
+        cout << "READ CALLBACK: " << hex << logic_addr << "\n";
         vector<struct PENDING_REQUESTS>::iterator ptr;
 
         for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
-            if (ptr->request->address == logic_addr)
+            if (ait::translate_to_block_addr(ptr->request->address) == ait::translate_to_block_addr(logic_addr) )
                 ptr->completed = true;
     };
 
     base_request req( req_type, req_addr, curr_clk, callback);
 
     auto [issued, deterministic, next_clk, val] = model->issue_request(req);
+
+    cout << issued << " " << val << " " << hex << req_addr << endl;
+    cout << "Done\n";
+    this->printout();
 
     if (val != -1)
     {
@@ -63,11 +68,19 @@ int NVDIMM::add_rq( PACKET* packet)
     else
     {
         // add to outstanding requests
-        struct PENDING_REQUESTS new_request;
-        new_request.completed = false;
-        new_request.request = packet;
+        struct PENDING_REQUESTS *new_request = new struct PENDING_REQUESTS;
+        PACKET *new_packet = new PACKET;
+        *new_packet = *packet;
+        new_request->completed = false;
+        new_request->request = new_packet;
+        new_request->x = outstanding.size()+1;
 
-        outstanding.push_back(new_request);
+
+
+        outstanding.push_back(*new_request);
+        printf("SECONF\n");
+        this->printout();
+        printf("\n");
     }
 
     // TODO: update_schedule_cycle
@@ -82,7 +95,7 @@ int NVDIMM::add_wq( PACKET* packet)
         return -1;
 
     // check if block-alignment is really needed
-    logic_addr_t req_addr = packet->address;
+    logic_addr_t req_addr = ait::translate_to_block_addr(packet->address);
     base_request_type req_type = base_request_type::write;
     clk_t curr_clk = current_core_cycle[packet->cpu];
 
@@ -104,6 +117,10 @@ int NVDIMM::add_wq( PACKET* packet)
 
     auto [issued, deterministic, next_clk, val] = model->issue_request(req);
 
+    cout << issued << " " << val << " " << hex << req_addr << "\n";
+    this->printout();
+    cout << "Done\n";
+
     if (val >= 0)
     {
         // merged with another WQ entry at index val
@@ -112,11 +129,19 @@ int NVDIMM::add_wq( PACKET* packet)
     else
     {
         // add to outstanding requests
-        struct PENDING_REQUESTS new_request;
-        new_request.completed = false;
-        new_request.request = packet;
+        struct PENDING_REQUESTS *new_request = new struct PENDING_REQUESTS;
+        PACKET *new_packet = new PACKET;
+        *new_packet = *packet;
+        new_request->completed = false;
+        new_request->request = new_packet;
+        new_request->x = outstanding.size()+1;
 
-        outstanding.push_back(new_request);
+
+
+        outstanding.push_back(*new_request);
+        printf("SECONFWWWWW\n");
+        this->printout();
+        printf("\n");
     }
 
     // TODO: update_schedule_cycle
@@ -188,6 +213,13 @@ void NVDIMM::operate()
     clk_t curr_clk = current_core_cycle[cpu];
     model->tick(curr_clk);
 
+    if (count != outstanding.size())
+    {
+        cout << "\n OPERATE: " << count << "\n";
+        printout();
+        count = outstanding.size();
+    }
+
     vector<struct PENDING_REQUESTS>::iterator ptr;
 
     for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
@@ -203,3 +235,11 @@ void NVDIMM::operate()
         }
 
 };
+
+void NVDIMM::printout(void)
+{
+    vector<struct PENDING_REQUESTS>::iterator ptr;
+
+    for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
+        cout << hex << ptr->request->address << " " << ptr->completed << " " << ptr->x << endl;
+}

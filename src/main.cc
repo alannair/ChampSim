@@ -237,10 +237,12 @@ void print_deadlock(uint32_t i)
     cout << " event: " << ooo_cpu[i].ROB.entry[ooo_cpu[i].ROB.head].event_cycle;
     cout << " current: " << current_core_cycle[i] << endl;
 
+    uncore.LLC.lower_level->printout();
+
     // print LQ entry
     cout << endl << "Load Queue Entry" << endl;
     for (uint32_t j=0; j<LQ_SIZE; j++) {
-        cout << "[LQ] entry: " << j << " instr_id: " << ooo_cpu[i].LQ.entry[j].instr_id << " address: " << hex << ooo_cpu[i].LQ.entry[j].physical_address << dec << " translated: " << +ooo_cpu[i].LQ.entry[j].translated << " fetched: " << +ooo_cpu[i].LQ.entry[i].fetched << endl;
+        cout << "[LQ] entry: " << j << " instr_id: " << dec <<  ooo_cpu[i].LQ.entry[j].instr_id << " Physical address: " << hex << ooo_cpu[i].LQ.entry[j].physical_address << " Virtual Address:" << ooo_cpu[i].LQ.entry[j].virtual_address << dec << " translated: " << +ooo_cpu[i].LQ.entry[j].translated << " fetched: " << +ooo_cpu[i].LQ.entry[i].fetched << endl;
     }
 
     // print SQ entry
@@ -923,6 +925,7 @@ int main(int argc, char** argv)
         // TODO: should it be backward?
         uncore.DRAM.operate();
         uncore.LLC.operate();
+        uncore.LLC.lower_level->operate();
     }
 
     uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time),

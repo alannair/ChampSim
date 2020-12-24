@@ -12,6 +12,7 @@ struct PENDING_REQUESTS
 {
     bool completed;
     PACKET *request;
+    int x;
 };
 
 class NVDIMM : public MEMORY
@@ -22,12 +23,14 @@ public:
     int fill_level;
     int cpu; // a single-core machine assumed
     vector<struct PENDING_REQUESTS> outstanding;
+    int count;
 
 
     NVDIMM(string filename, int fill) :
      config_filename(filename), fill_level(fill)
     {
         cpu = 0;
+        count = 0;
         // upper_level_dcache =
         auto cfg   = vans::root_config(config_filename);
         model = vans::factory::make(cfg);
@@ -49,6 +52,8 @@ public:
 
     uint32_t get_occupancy (uint8_t queue_type, uint64_t address); //done
     uint32_t get_size (uint8_t queue_type, uint64_t address); //done
+
+    void printout(void);
 
     // void schedule (PACKET_QUEUE *queue);
     // void process (PACKET_QUEUE *queue);

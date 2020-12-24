@@ -242,7 +242,7 @@ class ait_controller : public memory_controller<vans::base_request, vans::dram::
     base_response issue_request(base_request &request) override
     {
         bool issued = lsq.enqueue(request);
-        return {(issued), false, clk_invalid};
+        return {(issued), false, clk_invalid, -1};
     }
 
     bool check_and_evict();

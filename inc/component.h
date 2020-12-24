@@ -42,6 +42,9 @@ class base_component : public tick_able
 
     virtual base_response issue_request(base_request &req) = 0;
 
+    // virtual base_request_queue get_rpq() = 0;
+    // virtual base_request_queue get_wpq() = 0;
+
     virtual bool full() = 0;
 
     virtual bool pending() = 0;

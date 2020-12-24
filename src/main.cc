@@ -705,7 +705,7 @@ int main(int argc, char** argv)
         // TLBs
         ooo_cpu[i].ITLB.cpu = i;
         ooo_cpu[i].ITLB.cache_type = IS_ITLB;
-	ooo_cpu[i].ITLB.MAX_READ = 2;
+        ooo_cpu[i].ITLB.MAX_READ = 2;
         ooo_cpu[i].ITLB.fill_level = FILL_L1;
         ooo_cpu[i].ITLB.extra_interface = &ooo_cpu[i].L1I;
         ooo_cpu[i].ITLB.lower_level = &ooo_cpu[i].STLB;
@@ -733,8 +733,8 @@ int main(int argc, char** argv)
         ooo_cpu[i].L1I.fill_level = FILL_L1;
         ooo_cpu[i].L1I.lower_level = &ooo_cpu[i].L2C;
         ooo_cpu[i].l1i_prefetcher_initialize();
-	ooo_cpu[i].L1I.l1i_prefetcher_cache_operate = cpu_l1i_prefetcher_cache_operate;
-	ooo_cpu[i].L1I.l1i_prefetcher_cache_fill = cpu_l1i_prefetcher_cache_fill;
+        ooo_cpu[i].L1I.l1i_prefetcher_cache_operate = cpu_l1i_prefetcher_cache_operate;
+        ooo_cpu[i].L1I.l1i_prefetcher_cache_fill = cpu_l1i_prefetcher_cache_fill;
 
         ooo_cpu[i].L1D.cpu = i;
         ooo_cpu[i].L1D.cache_type = IS_L1D;
@@ -751,26 +751,33 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.lower_level = &uncore.LLC;
         ooo_cpu[i].L2C.l2c_prefetcher_initialize();
 
+        // NVDIMM VANS(config_filename);
+        // VANS.fill_level = FILL_DRAM;
+        // VANS.upper_level_icache[i] = &uncore.LLC;
+        // VANS.upper_level_dcache[i] = &uncore.LLC;
+        // VANS.init();
+
         // SHARED CACHE
         uncore.LLC.cache_type = IS_LLC;
         uncore.LLC.fill_level = FILL_LLC;
         uncore.LLC.MAX_READ = NUM_CPUS;
         uncore.LLC.upper_level_icache[i] = &ooo_cpu[i].L2C;
         uncore.LLC.upper_level_dcache[i] = &ooo_cpu[i].L2C;
-        uncore.LLC.lower_level = &uncore.DRAM;
+        // uncore.LLC.lower_level = &uncore.DRAM;
+        // uncore.LLC.lower_level = &(VANS);
+        uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
+        // uncore.LLC.lower_level->fill_level = FILL_DRAM;
+        uncore.LLC.lower_level->upper_level_icache[0] = &uncore.LLC;
+        uncore.LLC.lower_level->upper_level_dcache[0] = &uncore.LLC;
 
         // OFF-CHIP DRAM
         uncore.DRAM.fill_level = FILL_DRAM;
         uncore.DRAM.upper_level_icache[i] = &uncore.LLC;
         uncore.DRAM.upper_level_dcache[i] = &uncore.LLC;
-        for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
-            uncore.DRAM.RQ[i].is_RQ = 1;
-            uncore.DRAM.WQ[i].is_WQ = 1;
+        for (uint32_t j=0; j<DRAM_CHANNELS; j++) {
+            uncore.DRAM.RQ[j].is_RQ = 1;
+            uncore.DRAM.WQ[j].is_WQ = 1;
         }
-
-        NVDIMM VANS(config_filename);
-        VANS.init();
-        // VANS.config_filename = config_filename;
 
         warmup_complete[i] = 0;
         //all_warmup_complete = NUM_CPUS;

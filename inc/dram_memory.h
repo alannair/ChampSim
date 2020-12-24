@@ -148,7 +148,7 @@ class dram_media_controller : public media_controller<dram_media_request, DRAM<S
         auto &queue = get_queue(request.type);
         auto issued = queue.enqueue(request);
         if (!issued)
-            return {false, false, clk_invalid};
+            return {false, false, clk_invalid, -1};
 
         if (this->report_epoch != 0) {
             if (this->report_cnt % this->report_epoch == 0) {
@@ -173,7 +173,7 @@ class dram_media_controller : public media_controller<dram_media_request, DRAM<S
             }
         }
 
-        return {true, false, clk_invalid};
+        return {true, false, clk_invalid, -1};
     }
 
     void tick(clk_t new_clk) override
@@ -203,7 +203,7 @@ class dram_media_controller : public media_controller<dram_media_request, DRAM<S
                 // addr_vec[2] = -1;
                 // addr_vec[3] = -1;
                 request req(addr_vec, req_type::refresh);
-                auto [res, deterministic, next_clk] = issue_request(req);
+                auto [res, deterministic, next_clk, extraval] = issue_request(req);
                 if (!res) {
                     printf("DRAM::misc_size %lu\n", misc_queue.queue.size());
                     printf("DRAM::act_size %lu\n", act_queue.queue.size());

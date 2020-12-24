@@ -60,6 +60,7 @@ class base_request
     logic_addr_t addr = addr_invalid;
     clk_t arrive      = clk_invalid;
     clk_t depart      = clk_invalid;
+    int operation = 0; // 1: get_size, 2: get_occupancy (see vans_wrapper.cc)
 
     base_request_type type;
 
@@ -81,7 +82,7 @@ class base_request
  * [(0) issued: true, (1) deterministic: false, (2) next_clk: `clk_invalid`      ]
  *   if issued and the request is dynamically served, which will call a callback function once served
  */
-using base_response = std::tuple<bool, bool, clk_t>;
+using base_response = std::tuple<bool, bool, clk_t, int>;
 
 struct base_request_queue : public request_queue<base_request> {
     base_request_queue() = delete;

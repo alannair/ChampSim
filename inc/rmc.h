@@ -20,6 +20,9 @@ class rmc_controller : public memory_controller<vans::base_request, vans::static
         return next->issue_request(request);
     }
 
+    // base_request_queue get_rpq() override;
+    // base_request_queue get_wpq() override;
+
     bool full() override
     {
         throw std::runtime_error("Internal error, function not supposed to be invoked.");

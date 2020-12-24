@@ -37,14 +37,14 @@ class static_media_controller : public media_controller<base_request, static_med
         }
         switch (request.type) {
         case base_request_type::read:
-            return {true, true, request.arrive + read_latency};
+            return {true, true, request.arrive + read_latency, -1};
             break;
         case base_request_type::write:
-            return {true, true, request.arrive + write_latency};
+            return {true, true, request.arrive + write_latency, -1};
             break;
         }
 
-        return {false, false, clk_invalid};
+        return {false, false, clk_invalid, -1};
     }
 
     void drain() final {}

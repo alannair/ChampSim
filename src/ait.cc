@@ -23,7 +23,7 @@ void ait_controller::init_state_trans_table()
     const auto issue_lmemq = [this](buffer_entry &entry, base_request_type type, clk_t curr_clk) -> base_response {
         base_request req{type, entry.pending_request.rmw_block_addr, curr_clk, nullptr};
         bool issued = this->lmemq.enqueue(req);
-        return {(issued), false, clk_invalid};
+        return {(issued), false, clk_invalid, -1};
     };
 
     const auto issue_write_local_memory = [this](buffer_entry &entry, clk_t curr_clk) {
@@ -47,7 +47,7 @@ void ait_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_read_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -69,7 +69,7 @@ void ait_controller::init_state_trans_table()
     trans(write_miss, pending_read_media)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_lmemq(entry, base_request_type::write, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_lmemq(entry, base_request_type::write, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -106,7 +106,7 @@ void ait_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -142,7 +142,7 @@ void ait_controller::init_state_trans_table()
     trans(write_hit, init)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_lmemq(entry, base_request_type::write, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_lmemq(entry, base_request_type::write, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -182,7 +182,7 @@ void ait_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -219,7 +219,7 @@ void ait_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_read_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -241,7 +241,7 @@ void ait_controller::init_state_trans_table()
     trans(read_miss, pending_read_media)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_lmemq(entry, base_request_type::read, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_lmemq(entry, base_request_type::read, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -277,7 +277,7 @@ void ait_controller::init_state_trans_table()
     trans(read_hit, init)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_lmemq(entry, base_request_type::read, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_lmemq(entry, base_request_type::read, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -535,7 +535,7 @@ void ait_controller::tick_lmemq(clk_t curr_clk)
 
         base_request req(req_type, cl_addr, curr_clk, callback);
 
-        auto [issued, deterministic, next_clk] = this->local_memory_model->issue_request(req);
+        auto [issued, deterministic, next_clk, extraval] = this->local_memory_model->issue_request(req);
 
         if (!issued) {
             throw std::runtime_error(

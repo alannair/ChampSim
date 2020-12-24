@@ -101,7 +101,7 @@ void run_trace(root_config &cfg, std::string &trace_filename, std::shared_ptr<ba
                 }
 
                 if (!critical_stall) {
-                    auto [issued, deterministic, next_clk] = model->issue_request(req);
+                    auto [issued, deterministic, next_clk, extraval] = model->issue_request(req);
                     stall                                  = !issued;
                     if (issued) {
                         if (type == base_request_type::read) {

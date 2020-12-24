@@ -34,7 +34,7 @@ bool rmw_controller::check_and_evict()
 base_response rmw_controller::issue_request(base_request &req)
 {
     auto success = lsq.enqueue(req);
-    return {(success), false, clk_invalid};
+    return {(success), false, clk_invalid, -1};
 }
 
 void rmw_controller::drain_current()
@@ -110,7 +110,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_read_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -143,7 +143,7 @@ void rmw_controller::init_state_trans_table()
     trans(write_rmw, pending_read)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_write_local_memory(entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_local_memory(entry, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -175,7 +175,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -211,7 +211,7 @@ void rmw_controller::init_state_trans_table()
     trans(write_comb, init)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_write_local_memory(entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_local_memory(entry, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -245,7 +245,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -280,7 +280,7 @@ void rmw_controller::init_state_trans_table()
     trans(write_patch, init)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_write_local_memory(entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_local_memory(entry, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -314,7 +314,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -349,7 +349,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_write_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_write_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -400,7 +400,7 @@ void rmw_controller::init_state_trans_table()
     {
         /* Check and issue request to next level */
         auto next                              = this->get_next_level(block_addr);
-        auto [issued, deterministic, next_clk] = issue_read_next_level(next, entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_next_level(next, entry, curr_clk);
         if (!issued) {
             cnt_events["next_level_issue_fail"]++;
             return;
@@ -433,7 +433,7 @@ void rmw_controller::init_state_trans_table()
     trans(read_cold, pending_read)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_read_local_memory(entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_local_memory(entry, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;
@@ -477,7 +477,7 @@ void rmw_controller::init_state_trans_table()
     trans(read_ff, init)
     {
         /* Issue request to local memory */
-        auto [issued, deterministic, next_clk] = issue_read_local_memory(entry, curr_clk);
+        auto [issued, deterministic, next_clk, extraval] = issue_read_local_memory(entry, curr_clk);
         if (!issued) {
             cnt_events["local_memory_issue_fail"]++;
             return;

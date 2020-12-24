@@ -28,6 +28,8 @@ class imc_controller : public memory_controller<vans::base_request, vans::static
     }
 
     base_response issue_request(base_request &request) final;
+    // base_request_queue get_rpq();
+    // base_request_queue get_wpq();
 
     void drain_current() final{};
 

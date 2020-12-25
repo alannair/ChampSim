@@ -13,77 +13,77 @@ namespace vans::imc
 //     return wpq;
 // }
 
-// base_response imc_controller::issue_request(base_request &request)
-// {
-//     bool success = false;
-//     switch (request.type) {
-//     case base_request_type::read:
-//         success = rpq.enqueue(request);
-//         break;
-//     case base_request_type::write:
-//         success = wpq.enqueue(request);
-//         break;
-//     }
-//
-//     return {(success), false, clk_invalid};
-// }
-
 base_response imc_controller::issue_request(base_request &request)
 {
     bool success = false;
-    
-    if (request.operation == 0)
-    {
-        // issue the request
-        if (request.type == base_request_type::read)
-        {
-            // check for latest writebacks in write queue
-            for (size_t i = 0; i < wpq.size(); i++)
-            {
-                if (wpq.queue[i].addr == request.addr)
-                    return { false, false, clk_invalid, -2};
-            }
-
-            // check for duplicates in read queue
-            for (size_t i = 0; i < rpq.size(); i++)
-            {
-                if (rpq.queue[i].addr == request.addr)
-                    return { false, false, clk_invalid, i};
-            }
-
-            success = rpq.enqueue(request);
-        }
-        else if (request.type == base_request_type::write)
-        {
-            // check for duplicates in write queue
-            for (size_t i = 0; i < wpq.size(); i++)
-            {
-                if (wpq.queue[i].addr == request.addr)
-                    return { false, false, clk_invalid, i};
-            }
-
-            success = wpq.enqueue(request);
-        }
-    }
-    else if (request.operation == 1)
-    {
-        // get size
-        if (request.type == base_request_type::read)
-            return { false, false, clk_invalid, (int)rpq.max_entries};
-        else if (request.type == base_request_type::write)
-            return { false, false, clk_invalid, (int)wpq.max_entries};
-    }
-    else if (request.operation == 2)
-    {
-        // get occupancy
-        if (request.type == base_request_type::read)
-            return { false, false, clk_invalid, (int)rpq.size()};
-        else if (request.type == base_request_type::write)
-            return { false, false, clk_invalid, (int)wpq.size()};
+    switch (request.type) {
+    case base_request_type::read:
+        success = rpq.enqueue(request);
+        break;
+    case base_request_type::write:
+        success = wpq.enqueue(request);
+        break;
     }
 
     return {(success), false, clk_invalid, -1};
 }
+
+// base_response imc_controller::issue_request(base_request &request)
+// {
+//     bool success = false;
+//
+//     if (request.operation == 0)
+//     {
+//         // issue the request
+//         if (request.type == base_request_type::read)
+//         {
+//             // check for latest writebacks in write queue
+//             for (size_t i = 0; i < wpq.size(); i++)
+//             {
+//                 if (wpq.queue[i].addr == request.addr)
+//                     return { false, false, clk_invalid, -2};
+//             }
+//
+//             // check for duplicates in read queue
+//             for (size_t i = 0; i < rpq.size(); i++)
+//             {
+//                 if (rpq.queue[i].addr == request.addr)
+//                     return { false, false, clk_invalid, i};
+//             }
+//
+//             success = rpq.enqueue(request);
+//         }
+//         else if (request.type == base_request_type::write)
+//         {
+//             // check for duplicates in write queue
+//             for (size_t i = 0; i < wpq.size(); i++)
+//             {
+//                 if (wpq.queue[i].addr == request.addr)
+//                     return { false, false, clk_invalid, i};
+//             }
+//
+//             success = wpq.enqueue(request);
+//         }
+//     }
+//     else if (request.operation == 1)
+//     {
+//         // get size
+//         if (request.type == base_request_type::read)
+//             return { false, false, clk_invalid, (int)rpq.max_entries};
+//         else if (request.type == base_request_type::write)
+//             return { false, false, clk_invalid, (int)wpq.max_entries};
+//     }
+//     else if (request.operation == 2)
+//     {
+//         // get occupancy
+//         if (request.type == base_request_type::read)
+//             return { false, false, clk_invalid, (int)rpq.size()};
+//         else if (request.type == base_request_type::write)
+//             return { false, false, clk_invalid, (int)wpq.size()};
+//     }
+//
+//     return {(success), false, clk_invalid, -1};
+// }
 
 void imc_controller::tick(clk_t curr_clk)
 {

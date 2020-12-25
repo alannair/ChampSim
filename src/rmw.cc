@@ -512,7 +512,9 @@ void rmw_controller::init_state_trans_table()
         entry.last_used_clk = curr_clk;
         if (!entry.pending_request_cl_index.empty()) {
             /* Go to pending_read state if there are pending requests. */
-            entry.state = request_state::pending_read;
+            // ALAN: The following transition was edited by me
+            entry.state = request_state::pending_readout;
+            // entry.state = request_state::pending_read;
         } else {
             entry.state   = request_state::end;
             entry.pending = false;

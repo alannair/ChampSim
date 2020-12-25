@@ -12,7 +12,6 @@ struct PENDING_REQUESTS
 {
     bool completed;
     PACKET *request;
-    int x;
 };
 
 class NVDIMM : public MEMORY

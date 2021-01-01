@@ -581,21 +581,16 @@ void rmw_controller::tick_lsq_read(clk_t curr_clk)
         /* Buffer entry not found, need to insert new entry */
         if (this->check_and_evict()) {
             /* Buffer has free space, construct new entry in-place */
-            // std::cout << std::dec << curr_clk << "\t" << std::hex << addr << "INSERTING READ_COLD\n";
-
             entry_pair = buffer.insert(addr, curr_clk, request_type::read_cold, addr, cl_bitmap);
             req_served = true;
             req_patch  = false;
         } else {
             /* Internal rmw full and cannot evict, nothing to do in this cycle */
-            // std::cout << std::dec << curr_clk << "\t" << std::hex << addr << "READ BUFFER FULL lmao\n";
             req_served = false;
         }
     } else {
         /* Buffer entry found, try to 1. patch the read request or 2. fast-forward */
         auto &entry = entry_pair->second;
-
-        // std::cout << std::dec << curr_clk << "\t" << entry.pending_request_cl_index.size() << "\tPending: " << entry.pending << "\tValid to Read: " << entry.valid_to_read << "\tBitmap:" << entry.cb_bitmap[cl_index] << "\t" << std::hex << addr << "\n";
 
         if (entry.pending
             && (entry.pending_request.type == request_type::read_cold
@@ -608,19 +603,15 @@ void rmw_controller::tick_lsq_read(clk_t curr_clk)
                     "the read request to patch does not have any pending read request, maybe a code bug.");
             }
             if ((entry.pending_request_cl_index.size() < block_size_cl) && (!entry.cb_bitmap[cl_index])) {
-                // std::cout << std::dec << curr_clk << "\t" << std::hex << addr << "\t Joined with existing request\n";
-
                 req_served = true;
                 req_patch  = true;
                 cnt_events["read_patch"]++;
             } else {
-                // std::cout << std::dec << curr_clk << "\t" << std::hex << addr << "\t Joined with existing request\n";
                 req_served = false;
             }
         } else {
             if (entry.valid_to_read) {
                 /* Fast forward */
-                // std::cout << std::dec << curr_clk << "\t" << std::hex << addr << "INSERTING READ_FF\n";
                 entry.assign_new_request(curr_clk, request_type::read_ff, addr, cl_bitmap);
                 req_served = true;
                 req_patch  = false;
@@ -659,13 +650,11 @@ void rmw_controller::tick_lsq_write(clk_t curr_clk)
     if (!entry_found) {
         /* Need to construct new rmw entry, check and evict before constructing new entry */
         if (!check_and_evict()) {
-            // std::cout << std::dec << curr_clk << "\t" << std::hex << curr_logic_addr << "WRITE BUFFER FULL lmao\n";
             return;
         }
     } else {
         if ((!patch_rmw) && entry_pair->second.pending) {
             /* This request is pending, wait for it to complete */
-            // std::cout << std::dec << curr_clk << "\t" << std::hex << curr_logic_addr << "WRITE: Entry got pending requests. WAIT\n";
             return;
         }
     }
@@ -702,13 +691,11 @@ void rmw_controller::tick_lsq_write(clk_t curr_clk)
         type = request_type::write_comb;
 
     if (!entry_found) {
-        // std::cout << std::dec << curr_clk << "\t" << std::hex << curr_logic_addr << "INSERTING WRITE_RMW/WRITE_COMB\n";
         entry_pair =
             buffer.insert(curr_block_addr, curr_clk, type, curr_logic_addr, static_cast<unsigned>(cl_hit.to_ulong()));
     } else {
         if (patch_rmw) {
             if (type == request_type::write_comb) {
-                // std::cout << std::dec << curr_clk << "\t" << std::hex << curr_logic_addr << "WRITE_COMB\n";
                 entry_pair->second.assign_new_request(
                     curr_clk, type, curr_logic_addr, static_cast<unsigned>(cl_hit.to_ulong()));
                 cnt_events["patch_rmw_comb"]++;
@@ -717,7 +704,6 @@ void rmw_controller::tick_lsq_write(clk_t curr_clk)
                 cnt_events["patch_rmw"]++;
             }
         } else {
-            // std::cout << std::dec << curr_clk << "\t" << std::hex << curr_logic_addr << "WRITE_PATCH\n";
             type = request_type::write_patch;
             entry_pair->second.assign_new_request(
                 curr_clk, type, curr_logic_addr, static_cast<unsigned>(cl_hit.to_ulong()));

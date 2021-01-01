@@ -261,6 +261,22 @@ void print_deadlock(uint32_t i)
         cout << " fill_level: " << queue->entry[j].fill_level << " lq_index: " << queue->entry[j].lq_index << " sq_index: " << queue->entry[j].sq_index << endl;
     }
 
+    queue = &ooo_cpu[i].L2C.MSHR;
+    cout << endl << queue->NAME << " Entry" << endl;
+    for (uint32_t j=0; j<queue->SIZE; j++) {
+        cout << "[" << queue->NAME << "] entry: " << j << " instr_id: " << queue->entry[j].instr_id << " rob_index: " << queue->entry[j].rob_index;
+        cout << " address: " << hex << queue->entry[j].address << " full_addr: " << queue->entry[j].full_addr << dec << " type: " << +queue->entry[j].type;
+        cout << " fill_level: " << queue->entry[j].fill_level << " lq_index: " << queue->entry[j].lq_index << " sq_index: " << queue->entry[j].sq_index << endl;
+    }
+
+    queue = &uncore.LLC.MSHR;
+    cout << endl << queue->NAME << " Entry" << endl;
+    for (uint32_t j=0; j<queue->SIZE; j++) {
+        cout << "[" << queue->NAME << "] entry: " << j << " instr_id: " << queue->entry[j].instr_id << " rob_index: " << queue->entry[j].rob_index;
+        cout << " address: " << hex << queue->entry[j].address << " full_addr: " << queue->entry[j].full_addr << dec << " type: " << +queue->entry[j].type;
+        cout << " fill_level: " << queue->entry[j].fill_level << " lq_index: " << queue->entry[j].lq_index << " sq_index: " << queue->entry[j].sq_index << endl;
+    }
+
     assert(0);
 }
 
@@ -889,6 +905,7 @@ int main(int argc, char** argv)
             if (all_warmup_complete == NUM_CPUS) { // this part is called only once when all cores are warmed up
                 all_warmup_complete++;
                 finish_warmup();
+                cout << "WARMED UP\n";
             }
 
             /*

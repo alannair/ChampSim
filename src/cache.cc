@@ -259,6 +259,9 @@ void CACHE::handle_writeback()
     if (writeback_cpu == NUM_CPUS)
         return;
 
+    if (cache_type == IS_L1D && current_core_cycle[writeback_cpu] > 22000000 && WQ.occupancy == 64)
+        writeback_cpu = 0;
+
     // handle the oldest entry
     if ((WQ.entry[WQ.head].event_cycle <= current_core_cycle[writeback_cpu]) && (WQ.occupancy > 0)) {
         int index = WQ.head;
@@ -359,7 +362,9 @@ void CACHE::handle_writeback()
                 {
                     // undo the mshr addition
                     int ind = check_mshr(&WQ.entry[index]);
-                    if (ind >= 0) MSHR.entry[ind].address = 0;
+                    // if (ind >= 0) MSHR.entry[ind].address = 0;
+                    assert(ind>=0);
+                    MSHR.remove_queue(&MSHR.entry[ind]);
                     miss_handled = 0;
                 }
                 else
@@ -736,7 +741,9 @@ void CACHE::handle_read()
             {
                 // undo the mshr addition
                 int ind = check_mshr(&RQ.entry[index]);
-                if (ind >= 0) MSHR.entry[ind].address = 0;
+                // if (ind >= 0) MSHR.entry[ind].address = 0;
+                assert(ind>=0);
+                MSHR.remove_queue(&MSHR.entry[ind]);
                 miss_handled = 0;
             }
             else
@@ -1042,7 +1049,9 @@ void CACHE::handle_prefetch()
                 {
                     // undo the mshr addition
                     int ind = check_mshr(&PQ.entry[index]);
-                    if (ind >= 0) MSHR.entry[ind].address = 0;
+                    // if (ind >= 0) MSHR.entry[ind].address = 0;
+                    // assert(ind>=0);
+                    MSHR.remove_queue(&MSHR.entry[ind]);
                     miss_handled = 0;
                 }
                 else
@@ -1059,28 +1068,6 @@ void CACHE::handle_prefetch()
     			    }
                 }
 
-                if (lower_level->add_rq(&PQ.entry[index]) == -2)
-                {
-                    miss_handled = 0;
-                }
-                else
-                {
-                    // run prefetcher on prefetches from higher caches
-      			  if(PQ.entry[index].pf_origin_level < fill_level)
-      			    {
-      			      if (cache_type == IS_LLC)
-      				{
-      				  cpu = prefetch_cpu;
-      				  PQ.entry[index].pf_metadata = llc_prefetcher_operate(PQ.entry[index].address<<LOG2_BLOCK_SIZE, PQ.entry[index].ip, 0, PREFETCH, PQ.entry[index].pf_metadata);
-      				  cpu = 0;
-      				}
-      			    }
-
-                    // add it to MSHRs if this prefetch miss will be filled to this cache level
-                 if (PQ.entry[index].fill_level <= fill_level)
-                   add_mshr(&PQ.entry[index]);
-
-                }
 
 		      }
 		      else {
@@ -1734,6 +1721,14 @@ void CACHE::return_data(PACKET *packet)
         assert(0);
     }
 
+    // if (all_warmup_complete == NUM_CPUS)
+    //     cout << NAME << " RET DATA\t " << current_core_cycle[packet->cpu] << " \t " << hex << packet->address << endl;
+
+    static long cycles = 0;
+
+    // if (all_warmup_complete >= NUM_CPUS && cache_type == IS_L1D)
+    //     cout << "RET DATA " << NAME << " \t" << dec << cycles << " \t" << current_core_cycle[packet->cpu] << " \t" << hex << packet->address << " \t" << MSHR.occupancy << " " << MSHR.SIZE <<  endl;
+
     // MSHR holds the most updated information about this request
     // no need to do memcpy
     MSHR.num_returned++;
@@ -1835,6 +1830,14 @@ int CACHE::check_mshr(PACKET *packet)
 void CACHE::add_mshr(PACKET *packet)
 {
     uint32_t index = 0;
+
+    // if (all_warmup_complete == NUM_CPUS)
+    //     cout << NAME << " ADD MSHR\t " << current_core_cycle[packet->cpu] << " \t " << hex << packet->address << endl;
+
+    static long cycles = 0;
+
+    // if (all_warmup_complete >= NUM_CPUS && cache_type == IS_L1D)
+    //     cout << "ADD MSHR " << NAME << " \t" << dec << cycles << " \t" << current_core_cycle[packet->cpu] << " \t" << hex << packet->address << " \t" << MSHR.occupancy << " " << MSHR.SIZE << endl;
 
     packet->cycle_enqueued = current_core_cycle[packet->cpu];
 

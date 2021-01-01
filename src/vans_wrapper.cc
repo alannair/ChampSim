@@ -34,19 +34,21 @@ int NVDIMM::add_rq( PACKET* packet)
     */
     auto callback = [&](logic_addr_t logic_addr, clk_t curr_clk)
     {
-        // cout << "READ CALLBACK: " << hex << logic_addr << "\n";
+        // cout << "READ CALLBACK: " << dec << curr_clk << "\t" << hex << logic_addr << "\n";
         vector<struct PENDING_REQUESTS>::iterator ptr;
 
         for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
             if (ait::translate_to_block_addr(ptr->request->address) == ait::translate_to_block_addr(logic_addr) )
                 ptr->completed = true;
+
+        // this->printout();
     };
 
     base_request req( req_type, req_addr, curr_clk, callback);
 
     auto [issued, deterministic, next_clk, val] = model->issue_request(req);
 
-    // cout << issued << " " << val << " " << hex << req_addr << endl;
+    // cout << issued << "\tREAD\t" << dec << curr_clk << "\t" << hex << req_addr << endl;
     // cout << "Done\n";
     // this->printout();
 
@@ -122,7 +124,7 @@ int NVDIMM::add_wq( PACKET* packet)
     */
     auto callback = [&](logic_addr_t logic_addr, clk_t curr_clk)
     {
-        // cout << "WRITE CALLBACK: " << hex << logic_addr << "\n";
+        // cout << "WRITE CALLBACK: " << dec << curr_clk << "\t" << hex << logic_addr << "\n";
         // vector<struct PENDING_REQUESTS>::iterator ptr;
         //
         // for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
@@ -134,6 +136,8 @@ int NVDIMM::add_wq( PACKET* packet)
     req.operation = 0;
 
     auto [issued, deterministic, next_clk, val] = model->issue_request(req);
+
+    // cout << issued << "\tWRITE\t" << dec << curr_clk << "\t" << hex << req_addr << endl;
 
     // cout << issued << " " << val << " " << hex << req_addr << "\n";
     // this->printout();
@@ -280,8 +284,10 @@ void NVDIMM::operate()
 
 void NVDIMM::printout(void)
 {
-    // vector<struct PENDING_REQUESTS>::iterator ptr;
-    //
-    // for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
-    //     cout << hex << ptr->request->address << " " << ptr->completed << endl;
+    vector<struct PENDING_REQUESTS>::iterator ptr;
+
+    cout << "Printing OUTSTANDING Requests Queue\n";
+
+    for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
+        cout << hex << ptr->request->address << " " << ptr->completed << endl;
 }

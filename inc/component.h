@@ -40,6 +40,8 @@ class base_component : public tick_able
 
     virtual void print_counters() = 0;
 
+    virtual void reset_counters() = 0;
+
     virtual base_response issue_request(base_request &req) = 0;
 
     // virtual base_request_queue get_rpq() = 0;
@@ -112,6 +114,13 @@ template <typename MemoryControllerType, typename MemoryType> class component : 
         for (auto &next : this->next) {
             next->print_counters();
         }
+    }
+
+    void reset_counters() override
+    {
+        this->ctrl->reset_counters();
+        for (auto &next: this->next)
+            next->reset_counters();
     }
 };
 

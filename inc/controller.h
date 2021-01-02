@@ -33,6 +33,7 @@ template <typename RequestType, typename ModelType> class controller : public ti
 
     /* print_counters: print all counters to console */
     virtual void print_counters() {}
+    virtual void reset_counters() {}
 };
 
 template <typename... Types> class memory_controller : public controller<Types...>

@@ -226,6 +226,7 @@ class CACHE : public MEMORY {
     void printout();
     void drain();
     void print_stats();
+    void reset_stats();
 };
 
 #endif

@@ -163,3 +163,9 @@ void NVDIMM::print_stats(void)
     model->print_counters();
     return;
 }
+
+void NVDIMM::reset_stats(void)
+{
+    model->reset_counters();
+    return;
+}

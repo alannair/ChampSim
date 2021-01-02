@@ -1906,3 +1906,8 @@ void CACHE::print_stats()
 {
     return;
 }
+
+void CACHE::reset_stats()
+{
+    return;
+}

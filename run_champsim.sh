@@ -49,3 +49,5 @@ OUTFILE=results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
 
 echo -e "\nNVDIMM STATS\n" >> ${OUTFILE}
 cat results/stats_0 >> ${OUTFILE}
+
+# r -warmup_instructions 5000000 -simulation_instructions 5000000 -config /home/alannair/Documents/ChampSim-VANS/config/vans.cfg -traces /home/alannair/Documents/ipc1_public/client_002.champsimtrace.xz &> results/debug.txt

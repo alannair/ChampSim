@@ -142,13 +142,21 @@ class counter
   public:
     std::string domain;     /* e.g. RMW or AIT */
     std::string sub_domain; /* e.g. events or duration */
+    std::vector<std::string> counter_name_list;
     std::map<std::string, size_t> counters;
 
     counter() = delete;
     counter(std::string domain, std::string sub_domain, const std::vector<std::string> &counter_names) :
         domain(std::move(domain)), sub_domain(std::move(sub_domain))
     {
-        for (const auto &name : counter_names)
+        counter_name_list = counter_names;
+        for (const auto &name : counter_name_list)
+            this->counters[name] = 0;
+    }
+
+    void reset()
+    {
+        for (const auto &name : counter_name_list)
             this->counters[name] = 0;
     }
 

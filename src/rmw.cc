@@ -513,7 +513,7 @@ void rmw_controller::init_state_trans_table()
         if (!entry.pending_request_cl_index.empty()) {
             /* Go to pending_read state if there are pending requests. */
             /* ALAN: Allow multiple cachelines fast forward. How are multiple fastforward requests ending up in the same entry, no idea */
-            entry.state = request_state::pending_readout;
+            entry.state = request_state::init;
             // entry.state = request_state::pending_read;
         } else {
             entry.state   = request_state::end;

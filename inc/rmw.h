@@ -258,6 +258,12 @@ class rmw_controller : public memory_controller<vans::base_request, static_memor
         this->cnt_duration.print(this->counter_dumper);
     }
 
+    void reset_counters() final
+    {
+        this->cnt_events.reset();
+        this->cnt_duration.reset();
+    }
+
   private:
     void tick_roq(clk_t curr_clk);
     void tick_lsq(clk_t curr_clk);

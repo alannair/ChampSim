@@ -37,6 +37,7 @@ class MEMORY {
     virtual void printout() = 0;
     virtual void drain() = 0;
     virtual void print_stats() = 0;
+    virtual void reset_stats() = 0;
 
     // stats
     uint64_t ACCESS[NUM_TYPES], HIT[NUM_TYPES], MISS[NUM_TYPES], MSHR_MERGED[NUM_TYPES], STALL[NUM_TYPES];

@@ -24,7 +24,6 @@ public:
     vector<struct PENDING_REQUESTS> outstanding;
     int count;
 
-
     NVDIMM(string filename, int fill) :
      config_filename(filename), fill_level(fill)
     {
@@ -32,6 +31,9 @@ public:
         count = 0;
         auto cfg   = vans::root_config(config_filename);
         model = vans::factory::make(cfg);
+
+        // get any config value this way
+        // cout << cfg.at("rmw").cfg["lsq_entries"] << " RMW LSQ entries\n";
     };
 
     ~NVDIMM()
@@ -54,7 +56,7 @@ public:
     void printout(void);
     void drain(void);
     void print_stats(void);
-
+    void reset_stats(void);
 };
 
 extern NVDIMM VANS;

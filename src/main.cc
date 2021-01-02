@@ -184,15 +184,8 @@ void finish_warmup()
     }
     cout << endl;
 
-    // reset DRAM stats
-    // for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
-    //     uncore.DRAM.RQ[i].ROW_BUFFER_HIT = 0;
-    //     uncore.DRAM.RQ[i].ROW_BUFFER_MISS = 0;
-    //     uncore.DRAM.WQ[i].ROW_BUFFER_HIT = 0;
-    //     uncore.DRAM.WQ[i].ROW_BUFFER_MISS = 0;
-    // }
-
-    // ALAN: reset NVDIMM stats
+    // reset NVDIMM stats
+    uncore.LLC.lower_level->reset_stats();
 
     // set actual cache latency
     for (uint32_t i=0; i<NUM_CPUS; i++) {
@@ -749,12 +742,6 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.lower_level = &uncore.LLC;
         ooo_cpu[i].L2C.l2c_prefetcher_initialize();
 
-        // NVDIMM VANS(config_filename);
-        // VANS.fill_level = FILL_DRAM;
-        // VANS.upper_level_icache[i] = &uncore.LLC;
-        // VANS.upper_level_dcache[i] = &uncore.LLC;
-        // VANS.init();
-
         // SHARED CACHE
         uncore.LLC.cache_type = IS_LLC;
         uncore.LLC.fill_level = FILL_LLC;
@@ -907,8 +894,6 @@ int main(int argc, char** argv)
                 run_simulation = 0;
         }
 
-        // TODO: should it be backward?
-        // uncore.DRAM.operate();
         uncore.LLC.operate();
         uncore.LLC.lower_level->operate();
     }

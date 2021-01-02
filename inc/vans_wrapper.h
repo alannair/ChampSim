@@ -52,6 +52,8 @@ public:
     uint32_t get_size (uint8_t queue_type, uint64_t address);
 
     void printout(void);
+    void drain(void);
+    void print_stats(void);
 
 };
 

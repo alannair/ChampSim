@@ -115,28 +115,6 @@ void print_branch_stats()
     }
 }
 
-void print_dram_stats()
-{
-    cout << endl;
-    cout << "DRAM Statistics" << endl;
-    for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
-        cout << " CHANNEL " << i << endl;
-        cout << " RQ ROW_BUFFER_HIT: " << setw(10) << uncore.DRAM.RQ[i].ROW_BUFFER_HIT << "  ROW_BUFFER_MISS: " << setw(10) << uncore.DRAM.RQ[i].ROW_BUFFER_MISS << endl;
-        cout << " DBUS_CONGESTED: " << setw(10) << uncore.DRAM.dbus_congested[NUM_TYPES][NUM_TYPES] << endl;
-        cout << " WQ ROW_BUFFER_HIT: " << setw(10) << uncore.DRAM.WQ[i].ROW_BUFFER_HIT << "  ROW_BUFFER_MISS: " << setw(10) << uncore.DRAM.WQ[i].ROW_BUFFER_MISS;
-        cout << "  FULL: " << setw(10) << uncore.DRAM.WQ[i].FULL << endl;
-        cout << endl;
-    }
-
-    uint64_t total_congested_cycle = 0;
-    for (uint32_t i=0; i<DRAM_CHANNELS; i++)
-        total_congested_cycle += uncore.DRAM.dbus_cycle_congested[i];
-    if (uncore.DRAM.dbus_congested[NUM_TYPES][NUM_TYPES])
-        cout << " AVG_CONGESTED_CYCLE: " << (total_congested_cycle / uncore.DRAM.dbus_congested[NUM_TYPES][NUM_TYPES]) << endl;
-    else
-        cout << " AVG_CONGESTED_CYCLE: -" << endl;
-}
-
 void reset_cache_stats(uint32_t cpu, CACHE *cache)
 {
     for (uint32_t i=0; i<NUM_TYPES; i++) {
@@ -207,12 +185,14 @@ void finish_warmup()
     cout << endl;
 
     // reset DRAM stats
-    for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
-        uncore.DRAM.RQ[i].ROW_BUFFER_HIT = 0;
-        uncore.DRAM.RQ[i].ROW_BUFFER_MISS = 0;
-        uncore.DRAM.WQ[i].ROW_BUFFER_HIT = 0;
-        uncore.DRAM.WQ[i].ROW_BUFFER_MISS = 0;
-    }
+    // for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
+    //     uncore.DRAM.RQ[i].ROW_BUFFER_HIT = 0;
+    //     uncore.DRAM.RQ[i].ROW_BUFFER_MISS = 0;
+    //     uncore.DRAM.WQ[i].ROW_BUFFER_HIT = 0;
+    //     uncore.DRAM.WQ[i].ROW_BUFFER_MISS = 0;
+    // }
+
+    // ALAN: reset NVDIMM stats
 
     // set actual cache latency
     for (uint32_t i=0; i<NUM_CPUS; i++) {
@@ -781,21 +761,9 @@ int main(int argc, char** argv)
         uncore.LLC.MAX_READ = NUM_CPUS;
         uncore.LLC.upper_level_icache[i] = &ooo_cpu[i].L2C;
         uncore.LLC.upper_level_dcache[i] = &ooo_cpu[i].L2C;
-        // uncore.LLC.lower_level = &uncore.DRAM;
-        // uncore.LLC.lower_level = &(VANS);
         uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
-        // uncore.LLC.lower_level->fill_level = FILL_DRAM;
         uncore.LLC.lower_level->upper_level_icache[0] = &uncore.LLC;
         uncore.LLC.lower_level->upper_level_dcache[0] = &uncore.LLC;
-
-        // OFF-CHIP DRAM
-        uncore.DRAM.fill_level = FILL_DRAM;
-        uncore.DRAM.upper_level_icache[i] = &uncore.LLC;
-        uncore.DRAM.upper_level_dcache[i] = &uncore.LLC;
-        for (uint32_t j=0; j<DRAM_CHANNELS; j++) {
-            uncore.DRAM.RQ[j].is_RQ = 1;
-            uncore.DRAM.WQ[j].is_WQ = 1;
-        }
 
         warmup_complete[i] = 0;
         //all_warmup_complete = NUM_CPUS;
@@ -940,10 +908,12 @@ int main(int argc, char** argv)
         }
 
         // TODO: should it be backward?
-        uncore.DRAM.operate();
+        // uncore.DRAM.operate();
         uncore.LLC.operate();
         uncore.LLC.lower_level->operate();
     }
+
+    uncore.LLC.lower_level->drain();
 
     uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time),
              elapsed_minute = elapsed_second / 60,
@@ -961,9 +931,9 @@ int main(int argc, char** argv)
             print_sim_stats(i, &ooo_cpu[i].L1D);
             print_sim_stats(i, &ooo_cpu[i].L1I);
             print_sim_stats(i, &ooo_cpu[i].L2C);
-	    ooo_cpu[i].l1i_prefetcher_final_stats();
+            ooo_cpu[i].l1i_prefetcher_final_stats();
             ooo_cpu[i].L1D.l1d_prefetcher_final_stats();
-	    ooo_cpu[i].L2C.l2c_prefetcher_final_stats();
+            ooo_cpu[i].L2C.l2c_prefetcher_final_stats();
 #endif
             print_sim_stats(i, &uncore.LLC);
         }
@@ -993,7 +963,7 @@ int main(int argc, char** argv)
 
 #ifndef CRC2_COMPILE
     uncore.LLC.llc_replacement_final_stats();
-    print_dram_stats();
+    uncore.LLC.lower_level->print_stats();
     print_branch_stats();
 #endif
 

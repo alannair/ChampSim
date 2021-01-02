@@ -224,6 +224,8 @@ class CACHE : public MEMORY {
              lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type);
 
     void printout();
+    void drain();
+    void print_stats();
 };
 
 #endif

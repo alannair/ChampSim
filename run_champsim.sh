@@ -43,6 +43,9 @@ if [ ! -f "$TRACE_DIR/$TRACE" ] ; then
 fi
 
 mkdir -p results/results_${N_SIM}M
-(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 -config ${CONFIG_FILE} ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
+OUTFILE=results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
 
-#  r -warmup_instructions 50000000 -simulation_instructions 50000000 -config /home/alannair/Documents/ChampSim-VANS/config/vans.cfg -traces /home/alannair/Documents/ipc1_public/client_001.champsimtrace.xz &> results/debug.txt
+(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 -config ${CONFIG_FILE} ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> ${OUTFILE}
+
+echo -e "\nNVDIMM STATS\n" >> ${OUTFILE}
+cat results/stats_0 >> ${OUTFILE}

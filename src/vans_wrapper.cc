@@ -144,3 +144,22 @@ void NVDIMM::printout(void)
     for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
         cout << hex << ptr->request->address << " " << ptr->completed << endl;
 }
+
+void NVDIMM::drain(void)
+{
+    model->drain();
+
+    while (model->pending())
+    {
+        model->tick(current_core_cycle[cpu]);
+        current_core_cycle[cpu]++;
+    }
+
+    return;
+}
+
+void NVDIMM::print_stats(void)
+{
+    model->print_counters();
+    return;
+}

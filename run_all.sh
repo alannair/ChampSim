@@ -35,6 +35,10 @@ do
                 echo $trace
 
                 (./bin/${binary} -warmup_instructions ${n_warm}000000 -simulation_instructions ${sim_instr} -config ${CONFIG_FILE} -traces ${TRACE_DIR}/${trace}) &> ${results_folder}/${trace}-${binary}.txt || true
+
+                echo -e "\nNVDIMM STATS\n" >> ${results_folder}/${trace}-${binary}.txt
+                (cat results/stats_0 >> ${OUTFILE}) || true
+                rm results/stats_0
         fi
 
 done

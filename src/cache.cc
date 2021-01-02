@@ -1896,3 +1896,13 @@ void CACHE::printout()
 {
     return;
 }
+
+void CACHE::drain()
+{
+    return;
+}
+
+void CACHE::print_stats()
+{
+    return;
+}

@@ -160,9 +160,11 @@ class rmw_controller : public memory_controller<vans::base_request, static_memor
     logic_addr_t start_addr = 0;
 
     bool evicting = false;
+    bool roq_stall = false;
+    bool next_level_stall = false;
 
-    vans::counter cnt_events{"rmw",
-                             "events",
+    vans::counter cnt_events{"RMW",
+                             "EVENTS",
                              {
                                  "read_access",
                                  "write_access",
@@ -178,12 +180,32 @@ class rmw_controller : public memory_controller<vans::base_request, static_memor
                                  "patch_rmw_comb",
                                  "next_level_full",
                                  "roq_full",
+                                 "roq_stalls",
                                  "next_level_issue_fail",
                                  "local_memory_issue_fail",
-                             }};
+                             },
+                                {
+                                    "Read Access",
+                                    "Write Access",
+                                    "Eviction",
+                                    "Write RMW",
+                                    "Write Comb",
+                                    "Write Patch",
+                                    "Flush Back",
+                                    "Read Patch",
+                                    "Read Fast Forward",
+                                    "Read Cold",
+                                    "Patch RMW",
+                                    "Patch RMW Comb",
+                                    "Next Level FULL",
+                                    "ROQ FULL",
+                                    "ROQ STALLS",
+                                    "Next Level Issue Fail",
+                                    "Local Memory Issue Fail",
+                                }};
 
-    vans::counter cnt_duration{"rmw",
-                               "state_duration",
+    vans::counter cnt_duration{"RMW",
+                               "State Durations",
                                {
                                    "w_rmw_par",
                                    "w_rmw_pr",
@@ -202,6 +224,25 @@ class rmw_controller : public memory_controller<vans::base_request, static_memor
                                    "r_cold_pr",
                                    "r_cold_pro",
                                    "r_ff_pro",
+                               },
+                               {
+                                   "Write RMW Pending AIT Read",
+                                   "Write RMW Pending Read",
+                                   "Write RMW Pending AIT Write",
+                                   "Write RMW Pending Migration",
+                                   "Write Pending Write",
+                                   "Write Comb Pending AIT Write",
+                                   "Write Comb Pending Migration",
+                                   "Write Comb Pending Write",
+                                   "Write Patch Pending AIT Write",
+                                   "Write Patch Pending Migration",
+                                   "Write Patch Pending Write",
+                                   "Write Flush Pending AIT Write",
+                                   "Write Flush Pending Write",
+                                   "Read Cold Pending AIT Read",
+                                   "Read Cold Pending Read",
+                                   "Read Cold Pending ROQ",
+                                   "Read Fast-Forward Pending ROQ",
                                }};
 
   public:

@@ -23,6 +23,8 @@ public:
     int cpu;
     vector<struct PENDING_REQUESTS> outstanding;
     int count;
+    int TOTAL_ACCESSES, READ_ACCESSES, WRITE_ACCESSES, LSQ_STALLS, LSQ_FULL_CYCLES;
+    bool lsq_stall;
 
     NVDIMM(string filename, int fill) :
      config_filename(filename), fill_level(fill)
@@ -32,8 +34,13 @@ public:
         auto cfg   = vans::root_config(config_filename);
         model = vans::factory::make(cfg);
 
-        // get any config value this way
-        // cout << cfg.at("rmw").cfg["lsq_entries"] << " RMW LSQ entries\n";
+        TOTAL_ACCESSES = READ_ACCESSES = WRITE_ACCESSES = LSQ_STALLS = LSQ_FULL_CYCLES = 0;
+        lsq_stall = false;
+
+        cout << "DDR4 SIZE: " << cfg.at("ait").cfg["size"] << "MB\t Channels: "
+            << cfg.at("ait").cfg["channel"] << "\t Width: "
+            << 8*stoi(cfg.at("ait").cfg["data_width"]) << "-bit\t Data Rate: "
+            << cfg.at("ait").cfg["rate"] << " MT/S" << endl;
     };
 
     ~NVDIMM()

@@ -50,10 +50,23 @@ int NVDIMM::add_rq( PACKET* packet)
         new_request->request = new_packet;
 
         outstanding.push_back(*new_request);
+        ++READ_ACCESSES;
+        ++TOTAL_ACCESSES;
+        lsq_stall = false;
 
         return -1;
     }
-    else return -2;
+    else
+    {
+        ++LSQ_FULL_CYCLES;
+        if (!lsq_stall)
+        {
+            lsq_stall = true;
+            ++LSQ_STALLS;
+        }
+
+        return -2;
+    }
 
 };
 
@@ -81,8 +94,25 @@ int NVDIMM::add_wq( PACKET* packet)
     auto [issued, deterministic, next_clk, val] = model->issue_request(req);
 
     // add to outstanding requests
-    if (issued) return -1;
-    else return -2;
+    if (issued)
+    {
+        ++WRITE_ACCESSES;
+        ++TOTAL_ACCESSES;
+        lsq_stall = false;
+
+        return -1;
+    }
+    else
+    {
+        ++LSQ_FULL_CYCLES;
+        if (!lsq_stall)
+        {
+            lsq_stall = true;
+            ++LSQ_STALLS;
+        }
+
+        return -2;
+    }
 };
 
 int NVDIMM::add_pq(PACKET *packet)
@@ -160,12 +190,19 @@ void NVDIMM::drain(void)
 
 void NVDIMM::print_stats(void)
 {
+    cout << "\nOVERALL VANS STATS\n TOTAL ACCESSES: " << TOTAL_ACCESSES
+        << "\n READ ACCESSES: " << READ_ACCESSES << "\n WRITE ACCESSES: "
+        << WRITE_ACCESSES <<"\n LSQ_FULL_CYCLES: " << LSQ_FULL_CYCLES
+        << "\n LSQ_STALLS: " << LSQ_STALLS << "\n Average Congestion in LSQ: "
+        << (float)LSQ_FULL_CYCLES/LSQ_STALLS << " cycles" << endl;
+
     model->print_counters();
     return;
 }
 
 void NVDIMM::reset_stats(void)
 {
+    TOTAL_ACCESSES = READ_ACCESSES = WRITE_ACCESSES = LSQ_STALLS = LSQ_FULL_CYCLES = 0;
     model->reset_counters();
     return;
 }

@@ -455,8 +455,18 @@ void rmw_controller::init_state_trans_table()
         /* Issue request to roq (read-out-queue)*/
         if (roq.full()) {
             cnt_events["roq_full"]++;
+            if (!roq_stall)
+            {
+                roq_stall = true;
+                cnt_events["roq_stalls"]++;
+            }
             return;
         }
+        else
+        {
+            roq_stall = false;
+        }
+
         issue_roq(entry);
 
         /* Update counters*/
@@ -501,8 +511,18 @@ void rmw_controller::init_state_trans_table()
         /* Issue request to roq (read-out-queue)*/
         if (roq.full()) {
             cnt_events["roq_full"]++;
+            if (!roq_stall)
+            {
+                roq_stall = true;
+                cnt_events["roq_stalls"]++;
+            }
             return;
         }
+        else
+        {
+            roq_stall = false;
+        }
+
         issue_roq(entry);
 
         /* Update counters*/

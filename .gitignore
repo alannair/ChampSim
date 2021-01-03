@@ -1,3 +1,5 @@
 results
 bin
 obj
+ipc_trace_list.txt
+run_all.sh

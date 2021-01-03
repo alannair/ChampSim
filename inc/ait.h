@@ -179,8 +179,8 @@ class ait_controller : public memory_controller<vans::base_request, vans::dram::
 
     bool evicting = false;
 
-    vans::counter cnt_events{"ait",
-                             "events",
+    vans::counter cnt_events{"AIT",
+                             "Events",
                              {
                                  "read_access",
                                  "write_access",
@@ -193,10 +193,23 @@ class ait_controller : public memory_controller<vans::base_request, vans::dram::
                                  "lmem_read_access",
                                  "lmem_write_access",
                                  "local_memory_issue_fail",
-                             }};
+                             },
+                                {
+                                    "Read Access",
+                                    "Write Access",
+                                    "Eviction",
+                                    "Migration",
+                                    "Read Miss",
+                                    "Read Hit",
+                                    "Write Miss",
+                                    "Write Hit",
+                                    "Local Memory Read Access",
+                                    "Local Memory Write Access",
+                                    "Local Memory Issue Fail",
+                                }};
 
-    vans::counter cnt_duration{"ait",
-                               "state_duration",
+    vans::counter cnt_duration{"AIT",
+                               "State Durations",
                                {
                                    "w_miss_prm", /* Write Miss Pending Read Media  */
                                    "w_miss_pwd", /* Write Miss Pending Write Dram  */
@@ -208,7 +221,19 @@ class ait_controller : public memory_controller<vans::base_request, vans::dram::
                                    "r_miss_prm", /* Read Miss Pending Read Media   */
                                    "r_miss_prd", /* Read Miss Pending Read Dram    */
                                    "r_hit_prd",  /* Read Hit Pending Read Dram     */
-                               }};
+                               },
+                                {
+                                    "Write Miss Pending Read Media",
+                                    "Write Miss Pending Write DRAM",
+                                    "Write Miss Pending Migration",
+                                    "Write Miss Pending Write Media",
+                                    "Write Hit Pending Write DRAM",
+                                    "Write Hit Pending Migration",
+                                    "Write Hit Pending Write Media",
+                                    "Read Miss Pending Read Media",
+                                    "Read Miss Pending Read DRAM",
+                                    "Read Hit Pending Read DRAM",
+                                }};
 
   public:
     using state_trans_f = std::function<void(const block_addr_t block_addr, buffer_entry &entry, clk_t curr_clk)>;

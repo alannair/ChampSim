@@ -56,7 +56,7 @@ void run_trace(root_config &cfg, std::string &trace_filename, std::shared_ptr<ba
     clk_t idle_clk_injection = clk_invalid;
     double tCK               = std::stod(cfg["basic"]["tCK"]);
 
-    counter cnt_events("vans", "run_trace", {"write_access", "read_access", "total"});
+    counter cnt_events("vans", "run_trace", {"write_access", "read_access", "total"}, {"Write Access", "Read Access", "Total"});
     size_t tail_latency_cnt = 0;
 
     auto critical_read_callback = [&critical_stall](logic_addr_t logic_addr, clk_t curr_clk) {

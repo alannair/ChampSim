@@ -144,14 +144,20 @@ class counter
     std::string sub_domain; /* e.g. events or duration */
     std::vector<std::string> counter_name_list;
     std::map<std::string, size_t> counters;
+    std::map<std::string, std::string> desc;
 
     counter() = delete;
-    counter(std::string domain, std::string sub_domain, const std::vector<std::string> &counter_names) :
+    counter(std::string domain, std::string sub_domain, const std::vector<std::string> &counter_names, const std::vector<std::string> &descriptions) :
         domain(std::move(domain)), sub_domain(std::move(sub_domain))
     {
         counter_name_list = counter_names;
+        int i=0;
         for (const auto &name : counter_name_list)
+        {
             this->counters[name] = 0;
+            this->desc[name] = descriptions[i];
+            ++i;
+        }
     }
 
     void reset()
@@ -162,10 +168,11 @@ class counter
 
     void print(const std::shared_ptr<dumper> &d)
     {
-        std::string prefix = "cnt." + domain + "." + sub_domain + ".";
+        d->dump(domain + " " + sub_domain + "\n");
         for (const auto &cnt : counters) {
-            d->dump(prefix + cnt.first + ": " + std::to_string(cnt.second));
+            d->dump(desc[cnt.first] + ": " + std::to_string(cnt.second));
         }
+        d->dump("\n");
     }
 
     size_t &operator[](const std::string &name)

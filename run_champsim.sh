@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -lt 4 ]; then
+if [ "$#" -lt 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./run_champsim.sh [BINARY] [N_WARM] [N_SIM] [TRACE] [OPTION]"
+    echo "Usage: ./run_champsim.sh [BINARY] [N_WARM] [N_SIM] [VANS|DRAM] [TRACE] [OPTION]"
     exit 1
 fi
 
@@ -11,8 +11,9 @@ CONFIG_FILE=/home/alannair/Documents/ChampSim-VANS/config/vans.cfg
 BINARY=${1}
 N_WARM=${2}
 N_SIM=${3}
-TRACE=${4}
-OPTION=${5}
+MEMORY=${4}
+TRACE=${5}
+OPTION=${6}
 
 # Sanity check
 if [ -z $TRACE_DIR ] || [ ! -d "$TRACE_DIR" ] ; then
@@ -43,11 +44,13 @@ if [ ! -f "$TRACE_DIR/$TRACE" ] ; then
 fi
 
 mkdir -p results/results_${N_SIM}M
-OUTFILE=results/results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
+OUTFILE=results/results_${N_SIM}M/${TRACE}-${BINARY}-${MEMORY}${OPTION}.txt
 
-(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 -config ${CONFIG_FILE} ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> ${OUTFILE}
+(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 -config ${CONFIG_FILE} ${OPTION} -memory ${MEMORY} -traces ${TRACE_DIR}/${TRACE}) &> ${OUTFILE}
 
-echo -e "\nNVDIMM STATS\n" >> ${OUTFILE}
-cat results/stats_0 >> ${OUTFILE}
+if [[ "$MEMORY" == "VANS" ]]; then
+    echo -e "\nNVDIMM STATS\n" >> ${OUTFILE}
+    cat results/stats_0 >> ${OUTFILE}
+fi
 
-# r -warmup_instructions 5000000 -simulation_instructions 5000000 -config /home/alannair/Documents/ChampSim-VANS/config/vans.cfg -traces /home/alannair/Documents/ipc1_public/client_002.champsimtrace.xz &> results/debug.txt
+# r -warmup_instructions 5000000 -simulation_instructions 5000000 -config /home/alannair/Documents/ChampSim-VANS/config/vans.cfg -memory VANS -traces /home/alannair/Documents/ipc1_public/client_002.champsimtrace.xz &> results/debug.txt

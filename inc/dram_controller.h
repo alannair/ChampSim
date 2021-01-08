@@ -105,6 +105,9 @@ class MEMORY_CONTROLLER : public MEMORY {
     int check_dram_queue(PACKET_QUEUE *queue, PACKET *packet);
 
     void printout();
+    void drain();
+    void print_stats();
+    void reset_stats();
 };
 
 #endif

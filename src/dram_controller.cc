@@ -707,3 +707,44 @@ void MEMORY_CONTROLLER::printout()
 {
     return;
 }
+
+void MEMORY_CONTROLLER::drain()
+{
+    return;
+}
+
+void MEMORY_CONTROLLER::print_stats()
+{
+    cout << endl;
+    cout << "DRAM Statistics" << endl;
+    for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
+        cout << " CHANNEL " << i << endl;
+        cout << " RQ ROW_BUFFER_HIT: " << setw(10) << RQ[i].ROW_BUFFER_HIT << "  ROW_BUFFER_MISS: " << setw(10) << RQ[i].ROW_BUFFER_MISS << endl;
+        cout << " DBUS_CONGESTED: " << setw(10) << dbus_congested[NUM_TYPES][NUM_TYPES] << endl;
+        cout << " WQ ROW_BUFFER_HIT: " << setw(10) << WQ[i].ROW_BUFFER_HIT << "  ROW_BUFFER_MISS: " << setw(10) << WQ[i].ROW_BUFFER_MISS;
+        cout << "  FULL: " << setw(10) << WQ[i].FULL << endl;
+        cout << endl;
+    }
+
+    uint64_t total_congested_cycle = 0;
+    for (uint32_t i=0; i<DRAM_CHANNELS; i++)
+        total_congested_cycle += dbus_cycle_congested[i];
+    if (dbus_congested[NUM_TYPES][NUM_TYPES])
+        cout << " AVG_CONGESTED_CYCLE: " << (total_congested_cycle / dbus_congested[NUM_TYPES][NUM_TYPES]) << endl;
+    else
+        cout << " AVG_CONGESTED_CYCLE: -" << endl;
+
+    return;
+}
+
+void MEMORY_CONTROLLER::reset_stats()
+{
+    // reset DRAM stats
+    for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
+        RQ[i].ROW_BUFFER_HIT = 0;
+        RQ[i].ROW_BUFFER_MISS = 0;
+        WQ[i].ROW_BUFFER_HIT = 0;
+        WQ[i].ROW_BUFFER_MISS = 0;
+    }
+    return;
+}

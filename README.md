@@ -2,7 +2,7 @@
   <h1 align="center"> ChampSim-VANS </h1>
   <p> <b>ChampSim</b> is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. ChampSim is hosted at https://github.com/ChampSim/ChampSim</p>
   <p> <b>VANS</b>  is a cycle-level NVRAM simulator. Its performance is initially calibrated to match the Intel Optane Persistent Memory. But you can reconfigure VANS to model other NVRAM systems. VANS is hosted at https://github.com/TheNetAdmin/VANS.git. VANS is part of this <a href="https://cseweb.ucsd.edu/~ziw002/files/micro20-lens-vans.pdf">MICRO 2020 paper</a></p>
-  <p><b>Champsim-VANS</b> integrates the cache hierarchy of ChampSim with VANS. Note that as of now, multi-core support is disabled.</p>
+  <p><b>Champsim-VANS</b> integrates the cache hierarchy of ChampSim with VANS.</p>
 
 
 # Clone ChampSim-VANS repository
@@ -12,11 +12,11 @@ git clone https://github.com/alannair/ChampSim-VANS.git
 
 # Compile
 
-ChampSim takes six parameters to compile: Branch predictor, L1I prefetcher, L1D prefetcher, L2C prefetcher, LLC replacement policy, and the number of cores.
+ChampSim takes seven parameters to compile: Branch predictor, L1I prefetcher, L1D prefetcher, L2C prefetcher, LLC prefetcher, LLC replacement policy, and the number of cores.
 ```
-$ ./build_champsim.sh [BRANCH] [L1I_PREFETCHER] [L1D_PREFETCHER] [L2C_PREFETCHER] [LLC_PREFETCHER] [LLC_REPLACEMENT]
+$ ./build_champsim.sh [BRANCH] [L1I_PREFETCHER] [L1D_PREFETCHER] [L2C_PREFETCHER] [LLC_PREFETCHER] [LLC_REPLACEMENT] [NUM_CORE]
 ```
-For example, `/build_champsim.sh hashed_perceptron next_line next_line spp_dev no lru` builds a single-core processor with hashed-perceptron branch predictor, next-line L1I/L1D prefetchers, spp-dev L2 prefetcher, no LLC prefetcher and the baseline LRU replacement policy for the LLC.
+For example, `/build_champsim.sh hashed_perceptron next_line next_line spp_dev no lru 4` builds a 4-core processor with hashed-perceptron branch predictor, next-line L1I/L1D prefetchers, spp-dev L2 prefetcher, no LLC prefetcher and the baseline LRU replacement policy for the LLC.
 
 
 # Download Traces
@@ -31,21 +31,43 @@ IPC-1 traces can be downloaded from <a href="https://drive.google.com/file/d/1qs
 
 # Run simulation
 
-Execute `run_champsim.sh` with proper input arguments. The default `TRACE_DIR` in `run_champsim.sh` is to be set to the file path to the directory containing the traces. The default `CONFIG_FILE` is set to the file path to the VANS config file.<br>
+* Run single-core simulation with `run_champsim.sh` script.
 
-* Run simulation with `run_champsim.sh` script.
+First build the binary using `build_champsim.sh` with 1 core as parameter. Then  execute `run_champsim.sh` with proper input arguments. The default `TRACE_DIR` in `run_champsim.sh` is to be set to the file path to the directory containing the traces. The default `CONFIG_FILE` is set to the file path to the VANS config file.<br>
 
 ```
-Usage: ./run_champsim.sh [BINARY] [N_WARM] [N_SIM] [TRACE] [OPTION]
-$ ./run_champsim.sh hashed_perceptron-next_line-next_line-spp_dev-no-lru-1core 5 5 client_001.champsimtrace.xz
+Usage: ./run_champsim.sh [BINARY] [N_WARM] [N_SIM] [VANS|DRAM] [TRACE] [OPTION]
+$ ./run_champsim.sh hashed_perceptron-next_line-next_line-spp_dev-no-lru-1core 5 5 VANS client_001.champsimtrace.xz
 
 ${BINARY}: ChampSim binary compiled by "build_champsim.sh" present in the bin folder (bimodal-no-no-lru-1core)
 ${N_WARM}: number of instructions for warmup in millions (1 million)
 ${N_SIM}:  number of instructinos for detailed simulation in millions (10 million)
+VANS: Use the VANS NVDIMM as memory hierarchy
+DRAM: Use the ChampSim DRAM as memory hierarchy
 ${TRACE}: trace name (client_001.champsimtrace.xz)
 ${OPTION}: extra option for "-low_bandwidth" (src/main.cc)
 ```
-Simulation results will be stored under `results/results_${N_SIM}M` as `${TRACE}-${BINARY}-${OPTION}.txt`.<br>
+Simulation results will be stored under `results/results_${N_SIM}M` as `${TRACE}-${BINARY}-${VANS|DRAM}${OPTION}.txt`.<br>
+
+* Run multi-core simulation.
+
+The following example is for four cores. For a different number of cores, the steps are analogous.<br>
+First build the binary using `build_champsim.sh` with 4 cores as parameter. The execute `run_4core.sh` with proper input arguments. The default `TRACE_DIR` in `run_champsim.sh` is to be set to the file path to the directory containing the traces. The default `CONFIG_FILE` is set to the file path to the VANS config file.<br>
+
+```
+Usage: Usage: Usage: ./run_4core.sh [BINARY] [N_WARM] [N_SIM] [N_MIX] [VANS|DRAM] [TRACE0] [TRACE1] [TRACE2] [TRACE3] [OPTION]
+$ /run_4core.sh hashed_perceptron-next_line-next_line-spp_dev-no-lru-4core 5 5 client1234 VANS client_001.champsimtrace.xz client_002.champsimtrace.xz client_003.champsimtrace.xz client_004.champsimtrace.xz
+
+${BINARY}: ChampSim binary compiled by "build_champsim.sh" present in the bin folder (bimodal-no-no-lru-1core)
+${N_WARM}: number of instructions for warmup in millions (1 million)
+${N_SIM}:  number of instructinos for detailed simulation in millions (10 million)
+VANS: Use the VANS NVDIMM as memory hierarchy
+DRAM: Use the ChampSim DRAM as memory hierarchy
+${TRACE[0-3]}: trace name (client_001.champsimtrace.xz)
+${OPTION}: extra option for "-low_bandwidth" (src/main.cc)
+```
+Simulation results will be stored under `results/results_4core_${N_SIM}M` as `${TRACE}-${BINARY}-${VANS|DRAM}${OPTION}.txt`.<br>
+For a different number of cores, simply edit the `run_4core.sh` script accordingly and execute with a corresponding set of parameters.
 
 # Add your own branch predictor, data prefetchers, and replacement policy
 **Copy an empty template**

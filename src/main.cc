@@ -184,7 +184,7 @@ void finish_warmup()
     }
     cout << endl;
 
-    // reset NVDIMM stats
+    // reset DRAM/NVDIMM stats
     uncore.LLC.lower_level->reset_stats();
 
     // set actual cache latency
@@ -496,7 +496,7 @@ int main(int argc, char** argv)
 
     // initialize knobs
     uint8_t show_heartbeat = 1;
-    std::string config_filename;
+    std::string config_filename, memory_opt;
     uint32_t seed_number = 0;
 
     // check to see if knobs changed using getopt_long()
@@ -510,6 +510,7 @@ int main(int argc, char** argv)
             {"cloudsuite", no_argument, 0, 'c'},
             {"low_bandwidth",  no_argument, 0, 'b'},
             {"config", required_argument, 0, 'f'},
+            {"memory", required_argument, 0, 'm'},
             {"traces",  no_argument, 0, 't'},
             {0, 0, 0, 0}
         };
@@ -544,6 +545,11 @@ int main(int argc, char** argv)
             case 'f':
                 config_filename = optarg;
                 std::cout << config_filename << '\n';
+                break;
+            case 'm':
+                memory_opt = optarg;
+                std::cout << memory_opt << " used as Memory\n";
+                break;
             case 't':
                 traces_encountered = 1;
                 break;
@@ -761,7 +767,26 @@ int main(int argc, char** argv)
     uncore.LLC.cache_type = IS_LLC;
     uncore.LLC.fill_level = FILL_LLC;
     uncore.LLC.MAX_READ = NUM_CPUS;
-    uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
+
+    if (memory_opt == "VANS")
+    {
+        uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
+    }
+    else if (memory_opt == "DRAM")
+    {
+        uncore.LLC.lower_level = &uncore.DRAM;
+        uncore.DRAM.fill_level = FILL_DRAM;
+        for (uint32_t i=0; i<DRAM_CHANNELS; i++)
+        {
+            uncore.DRAM.RQ[i].is_RQ = 1;
+            uncore.DRAM.WQ[i].is_WQ = 1;
+        }
+
+        printf("Off-chip DRAM Size: %u MB Channels: %u Width: %u-bit Data Rate: %u MT/s\n\n",
+                DRAM_SIZE, DRAM_CHANNELS, 8*DRAM_CHANNEL_WIDTH, DRAM_MTPS);
+
+    }
+
     for (int i=0; i<NUM_CPUS; ++i)
     {
         uncore.LLC.lower_level->upper_level_icache[i] = &uncore.LLC;

@@ -739,15 +739,8 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.lower_level = &uncore.LLC;
         ooo_cpu[i].L2C.l2c_prefetcher_initialize();
 
-        // SHARED CACHE
-        uncore.LLC.cache_type = IS_LLC;
-        uncore.LLC.fill_level = FILL_LLC;
-        uncore.LLC.MAX_READ = NUM_CPUS;
         uncore.LLC.upper_level_icache[i] = &ooo_cpu[i].L2C;
         uncore.LLC.upper_level_dcache[i] = &ooo_cpu[i].L2C;
-        uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
-        uncore.LLC.lower_level->upper_level_icache[0] = &uncore.LLC;
-        uncore.LLC.lower_level->upper_level_dcache[0] = &uncore.LLC;
 
         warmup_complete[i] = 0;
         //all_warmup_complete = NUM_CPUS;
@@ -762,6 +755,17 @@ int main(int argc, char** argv)
         num_page[i] = 0;
         minor_fault[i] = 0;
         major_fault[i] = 0;
+    }
+
+    // SHARED CACHE
+    uncore.LLC.cache_type = IS_LLC;
+    uncore.LLC.fill_level = FILL_LLC;
+    uncore.LLC.MAX_READ = NUM_CPUS;
+    uncore.LLC.lower_level = new NVDIMM(config_filename, FILL_DRAM);
+    for (int i=0; i<NUM_CPUS; ++i)
+    {
+        uncore.LLC.lower_level->upper_level_icache[i] = &uncore.LLC;
+        uncore.LLC.lower_level->upper_level_dcache[i] = &uncore.LLC;
     }
 
     uncore.LLC.llc_initialize_replacement();

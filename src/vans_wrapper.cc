@@ -22,16 +22,27 @@ int NVDIMM::add_rq( PACKET* packet)
         return -1;
     }
 
-    logic_addr_t req_addr = packet->address;
+    logic_addr_t req_addr = packet->full_addr;
     base_request_type req_type = base_request_type::read;
     clk_t curr_clk = current_core_cycle[packet->cpu];
+
+    vector<struct PENDING_REQUESTS>::iterator ptr;
+    bool flag = false;
+
+    for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
+    {
+        if (ptr->request->address == packet->address)
+            flag = true;
+    }
+
+    if (flag) return -3;
 
     auto callback = [&, curr_clk](logic_addr_t logic_addr, clk_t clk)
     {
         vector<struct PENDING_REQUESTS>::iterator ptr;
 
         for (ptr = outstanding.begin(); ptr < outstanding.end(); ptr++)
-            if (ait::translate_to_block_addr(ptr->request->address) == ait::translate_to_block_addr(logic_addr) )
+            if ((logic_addr >> 6) == (ptr->request->full_addr >> 6))
             {
                 ptr->completed = true;
 
@@ -88,7 +99,7 @@ int NVDIMM::add_wq( PACKET* packet)
     if (all_warmup_complete < NUM_CPUS)
         return -1;
 
-    logic_addr_t req_addr = packet->address;
+    logic_addr_t req_addr = packet->full_addr;
     base_request_type req_type = base_request_type::write;
     clk_t curr_clk = current_core_cycle[packet->cpu];
     uint32_t curr_cpu = packet->cpu;
@@ -231,7 +242,7 @@ void NVDIMM::print_stats(void)
     //     << "\n RFO LATENCY: " << RFO_LATENCY[NUM_CPUS] << " \t REQUESTS: "
     //     << RFOS[NUM_CPUS] << " \t AVG: "
     //     << (float)RFO_LATENCY[NUM_CPUS] / RFOS[NUM_CPUS]
-    // 
+    //
     //     << endl;
 
     for (int i=0; i<NUM_CPUS; ++i)
@@ -271,6 +282,7 @@ void NVDIMM::print_stats(void)
     }
 
     model->print_counters();
+    printout();
     return;
 }
 
